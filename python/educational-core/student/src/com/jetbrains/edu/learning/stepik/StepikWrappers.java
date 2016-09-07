@@ -1,4 +1,19 @@
-package com.jetbrains.edu.learning.stepic;
+/*
+ * Copyright 2000-2016 JetBrains s.r.o.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.jetbrains.edu.learning.stepik;
 
 import com.google.gson.annotations.Expose;
 import com.intellij.openapi.application.ApplicationManager;
@@ -22,7 +37,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-public class StepicWrappers {
+public class StepikWrappers {
   private static final Logger LOG = Logger.getInstance(StepOptions.class);
 
   static class StepContainer {
@@ -32,7 +47,8 @@ public class StepicWrappers {
   public static class Step {
     @Expose StepOptions options;
     @Expose String text;
-    @Expose String name = "pycharm";
+    //@Expose String name = "pycharm";
+    @Expose String name;
     @Expose StepOptions source;
 
     public static Step fromTask(Project project, @NotNull final Task task) {
@@ -51,6 +67,7 @@ public class StepicWrappers {
     @Expose List<List<String>> samples;
     @Expose Integer executionMemoryLimit;
     @Expose Integer executionTimeLimit;
+    //    @Expose Map<String, String> codeTemplates;
     @Expose CodeTemplatesWrapper codeTemplates;
 
     public static StepOptions fromTask(final Project project, @NotNull final Task task) {
@@ -111,22 +128,32 @@ public class StepicWrappers {
   static class CodeTemplatesWrapper {
     String python3;
     String python27;
+    String java;
+    String java8;
 
     @Nullable
     public String getTemplateForLanguage(@NotNull final String langauge) {
-      if (langauge.equals(EduAdaptiveStepicConnector.PYTHON27)) {
+      if (langauge.equals(EduAdaptiveStepikConnector.PYTHON27)) {
         return python27;
       }
 
-      if (langauge.equals(EduAdaptiveStepicConnector.PYTHON3)) {
+      if (langauge.equals(EduAdaptiveStepikConnector.PYTHON3)) {
         return python3;
+      }
+
+      if (langauge.equals("java")) {
+        return java;
+      }
+
+      if (langauge.equals("java8")) {
+        return java8;
       }
 
       return null;
     }
   }
 
-  static class CoursesContainer {
+  public static class CoursesContainer {
     public List<CourseInfo> courses;
     public Map meta;
   }
@@ -168,6 +195,7 @@ public class StepicWrappers {
 
   static class StepSource {
     @Expose Step block;
+    @Expose int id;
     @Expose int position = 0;
     @Expose int lesson = 0;
 
@@ -186,11 +214,19 @@ public class StepicWrappers {
       this.name = name;
       this.text = text;
     }
+
+    @Override
+    public String toString() {
+      return "TestFileWrapper{" +
+             "name='" + name + '\'' +
+             ", text='" + text + '\'' +
+             '}';
+    }
   }
 
-  static class Section {
+  public static class Section {
     List<Integer> units;
-    int course;
+    public int course;
     String title;
     int position;
     int id;
@@ -200,38 +236,38 @@ public class StepicWrappers {
     Section section;
   }
 
-  static class SectionContainer {
-    List<Section> sections;
+  public static class SectionContainer {
+    public List<Section> sections;
     List<Lesson> lessons;
 
     List<Unit> units;
   }
 
-  static class Unit {
+  public static class Unit {
     int id;
-    int section;
+    public int section;
     int lesson;
     int position;
     List<Integer> assignments;
   }
 
-  static class UnitContainer {
+  public static class UnitContainer {
 
-    List<Unit> units;
+    public List<Unit> units;
   }
 
   static class UnitWrapper {
     Unit unit;
   }
 
-  static class AttemptWrapper {
-    static class Attempt {
+  public static class AttemptWrapper {
+    public static class Attempt {
       public Attempt(int step) {
         this.step = step;
       }
 
-      int step;
-      int id;
+      public int step;
+      public int id;
     }
 
     public AttemptWrapper(int step) {
@@ -263,8 +299,8 @@ public class StepicWrappers {
     Attempt attempt;
   }
 
-  static class AttemptContainer {
-    List<AttemptWrapper.Attempt> attempts;
+  public static class AttemptContainer {
+    public List<AttemptWrapper.Attempt> attempts;
   }
 
   static class SolutionFile {
@@ -277,30 +313,34 @@ public class StepicWrappers {
     }
   }
 
-  static class AuthorWrapper {
-    List<StepicUser> users;
+  public static class AuthorWrapper {
+    public List<StepikUser> users;
   }
 
-  static class SubmissionWrapper {
-    Submission submission;
+  public static class SubmissionContainer {
+    public List<Submission> submissions;
 
 
-    public SubmissionWrapper(int attempt, String score, ArrayList<SolutionFile> files) {
-      submission = new Submission(score, attempt, files);
+    public SubmissionContainer(int attempt, String score, ArrayList<SolutionFile> files) {
+      submissions = new ArrayList<>();
+      submissions.add(new Submission(score, attempt, files));
     }
 
-    static class Submission {
-      int attempt;
-      private final Reply reply;
+    public static class Submission {
+      public int id;
+      public int attempt;
+      public final Reply reply;
 
       public Submission(String score, int attempt, ArrayList<SolutionFile> files) {
         reply = new Reply(files, score);
         this.attempt = attempt;
       }
 
-      static class Reply {
+      public static class Reply {
         String score;
         List<SolutionFile> solution;
+        public String code;
+        public String language;
 
         public Reply(ArrayList<SolutionFile> files, String score) {
           this.score = score;
@@ -311,10 +351,10 @@ public class StepicWrappers {
   }
 
   static class UserWrapper {
-    StepicUser user;
+    StepikUser user;
 
     public UserWrapper(String user, String password) {
-      this.user = new StepicUser(user, password);
+      this.user = new StepikUser(user, password);
     }
   }
 
@@ -348,7 +388,7 @@ public class StepicWrappers {
   }
 
 
-  static class SubmissionToPostWrapper {
+  public static class SubmissionToPostWrapper {
     Submission submission;
 
     public SubmissionToPostWrapper(@NotNull String attemptId, @NotNull String language, @NotNull String code) {
@@ -376,25 +416,25 @@ public class StepicWrappers {
     }
   }
 
-  static class ResultSubmissionWrapper {
-    ResultSubmission[] submissions;
+  public static class ResultSubmissionWrapper {
+    public ResultSubmission[] submissions;
 
-    static class ResultSubmission {
-      int id;
-      String status;
-      String hint;
+    public static class ResultSubmission {
+      public int id;
+      public String status;
+      public String hint;
     }
   }
 
   static class AssignmentsWrapper {
     List<Assignment> assignments;
   }
-  
+
   static class Assignment {
     int id;
     int step;
   }
-  
+
   static class ViewsWrapper {
     View view;
 
@@ -402,7 +442,7 @@ public class StepicWrappers {
       this.view = new View(assignment, step);
     }
   }
-  
+
   static class View {
     int assignment;
     int step;
@@ -412,7 +452,7 @@ public class StepicWrappers {
       this.step = step;
     }
   }
-  
+
   static class Enrollment {
     String course;
 
@@ -420,11 +460,88 @@ public class StepicWrappers {
       course = courseId;
     }
   }
+
   static class EnrollmentWrapper {
     Enrollment enrollment;
 
     public EnrollmentWrapper(@NotNull final String courseId) {
       enrollment = new Enrollment(courseId);
+    }
+  }
+
+  static class TokenInfo {
+    @Expose String accessToken;
+    @Expose String refreshToken;
+    @Expose String tokenType;
+    @Expose String scope;
+    @Expose int expiresIn;
+
+    public TokenInfo() {
+      accessToken = "";
+      refreshToken = "";
+    }
+
+    public String getAccessToken() {
+      return accessToken;
+    }
+
+    public String getRefreshToken() {
+      return refreshToken;
+    }
+  }
+
+  public static class MetricsWrapper {
+    Metric metric;
+
+    public MetricsWrapper(String tags_name, String tags_action, int courseId, int stepId) {
+      metric = new Metric(tags_name, tags_action, courseId, stepId);
+    }
+
+    public interface MetricActions {
+      String POST = "post";
+      String DOWNLOAD = "download";
+      String GET_COURSE = "get_course";
+    }
+
+    public interface PluginNames {
+      String S_Union = "S_Union";
+      String S_CLion = "S_CLion";
+      String S_PyCharm = "S_PyCharm";
+    }
+
+    public class Metric {
+      String name = "ide_plugin";
+      Tags tags;
+      Data data;
+
+      public Metric(String tags_name, String tags_action, int courseId, int stepId) {
+        this.tags = new Tags(tags_name, tags_action);
+        this.data = new Data(courseId, stepId);
+      }
+
+      public class Tags {
+        String name;
+        String action;
+
+        public Tags(String action) {
+          this.action = action;
+        }
+
+        public Tags(String name, String action) {
+          this.name = name;
+          this.action = action;
+        }
+      }
+
+      public class Data {
+        int courseId;
+        int stepId;
+
+        public Data(int courseId, int stepId) {
+          this.courseId = courseId;
+          this.stepId = stepId;
+        }
+      }
     }
   }
 }
